@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  gateway:
+    build: ./src/Gateway
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - lead-api
+      - complaints-api
+      - master-api
+      - serviceappointments-api
+
+  lead-api:
+    build: ./src/Services/Lead/Api
+    environment:
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=cms;Username=postgres;Password=postgres
+      - RabbitMQ__Host=rabbitmq
+    ports:
+      - "5001:5001"
+    depends_on: [postgres, rabbitmq]
+
+  complaints-api:
+    build: ./src/Services/Complaints/Api
+    environment:
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=cms;Username=postgres;Password=postgres
+      - RabbitMQ__Host=rabbitmq
+    ports:
+      - "5002:5002"
+    depends_on: [postgres, rabbitmq]
+
+  master-api:
+    build: ./src/Services/Master/Api
+    environment:
+      - ASPNETCORE_URLS=http://+:5003
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=cms;Username=postgres;Password=postgres
+      - RabbitMQ__Host=rabbitmq
+    ports:
+      - "5003:5003"
+    depends_on: [postgres, rabbitmq]
+
+  serviceappointments-api:
+    build: ./src/Services/ServiceAppointments/Api
+    environment:
+      - ASPNETCORE_URLS=http://+:5004
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=cms;Username=postgres;Password=postgres
+      - RabbitMQ__Host=rabbitmq
+    ports:
+      - "5004:5004"
+    depends_on: [postgres, rabbitmq]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
